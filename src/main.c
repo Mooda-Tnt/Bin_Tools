@@ -4,11 +4,24 @@
 
 typedef enum {UNSUPPORTED = -1, ELF, PE} File_Format;
 
-size_t get_binary_size(FILE * binary_file)
+long get_binary_size(FILE * bin)
 {
-	// TODO:
-	// Implement get_binary_size().
-	return 4;
+	int result = fseek(bin, 0, SEEK_END);
+	if(result)
+	{
+		printf("An error occured while accessing the given binary.\n");
+		return -1L;
+	}
+
+	long size = ftell(bin);
+	if(size == -1L)
+	{
+                printf("An error occured while calculating the size of the given binary.\n");
+                return -1L;
+        }
+
+	rewind(bin);
+	return size;
 }
 
 File_Format identify_file(FILE * binary_file)
@@ -41,6 +54,19 @@ int main(int argc, char **argv)
 		printf("Binary file does not exist!\n");
 		return EXIT_FAILURE;
 	}
+	
+	long bin_size = get_binary_size(bin);
+	if(bin_size == -1L)
+    		return EXIT_FAILURE;
+
+        if(bin_size < 4)
+        {
+                printf("Malformed binary file\n");
+                return EXIT_FAILURE;
+        }
+
+	// Debugging line.
+	printf("%ld\n", bin_size);
 
 	File_Format ff = identify_file(bin);
         if(ff)
