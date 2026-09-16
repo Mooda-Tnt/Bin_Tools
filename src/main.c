@@ -32,19 +32,55 @@ Error_Code get_binary_size(FILE *bin, long *size)
     return ERR_NONE;
 }
 
-File_Format identify_file(FILE * binary_file)
+Error_Code identify_file(FILE *bin, File_Format *file_format)
 {
-	const unsigned char elf_magic_number[4] = {'\x7f', '\x45', '\x4c', '\x46'};
-	
-	unsigned char magic_number[4];
-	fread(magic_number, sizeof(*magic_number), sizeof(magic_number) / sizeof(*magic_number), binary_file);
+	const unsigned char Elf_Magic_Number[MAGIC_NUMBER_SIZE] = {'\x7f', '\x45', '\x4c', '\x46'};
+    const unsigned char Dos_Magic_Number[DOS_MAGIC_NUMBER_SIZE] = {'\x4d', '\x5a'};
+    const unsigned char Pe_Magic_Number[MAGIC_NUMBER_SIZE] = {'\x50', '\x45', '\x00', '\x00'};
 
-	int result = memcmp(elf_magic_number, magic_number, 4);
-	if(result == 0)
-		return ELF;
+    unsigned char magic_number[MAGIC_NUMBER_SIZE];
+    if(fread(magic_number, sizeof(*magic_number), MAGIC_NUMBER_SIZE, bin) != MAGIC_NUMBER_SIZE)
+		return ERR_FILE_READ_FAILED;
 
-	return UNSUPPORTED;
+    if(!memcmp(Elf_Magic_Number, magic_number, MAGIC_NUMBER_SIZE))
+    	*file_format = ELF;
+
+	else if(!memcmp(Dos_Magic_Number, magic_number, DOS_MAGIC_NUMBER_SIZE))
+	{
+		uint32_t e_lfanew;
+		size_t object_count = sizeof(uint32_t) / sizeof(uint32_t);
+		
+		// Access e_lfanew to learn where the PE signature begins.
+		if(fseek(bin, E_LFANEW_OFFSET - MAGIC_NUMBER_SIZE, SEEK_CUR) != 0)
+			return ERR_FILE_ACCESS_FAILED;
+		
+		// TODO: Wory about endianness later.   
+		// Read e_lfanew.
+		if(fread(&e_lfanew, sizeof(uint32_t), object_count, bin) != object_count)
+			return ERR_FILE_READ_FAILED;
+		
+		// Access magic number of PE.
+		if(fseek(bin, e_lfanew - (E_LFANEW_OFFSET + sizeof(uint32_t)), SEEK_CUR) != 0)
+			return ERR_FILE_ACCESS_FAILED;
+		
+		// Read magic number of PE.
+		if(fread(magic_number, sizeof(*magic_number), MAGIC_NUMBER_SIZE, bin) != MAGIC_NUMBER_SIZE)
+			return ERR_FILE_READ_FAILED;
+		
+		if(!memcmp(Pe_Magic_Number, magic_number, MAGIC_NUMBER_SIZE))
+			*file_format = PE;
+		else
+			*file_format = UNSUPPORTED;
+    }
+
+	else
+		*file_format = UNSUPPORTED;
+
+    rewind(bin);
+
+    return ERR_NONE;
 }
+
 
 int main(int argc, char **argv)
 {
