@@ -13,4 +13,6 @@ typedef enum
 
 } Error_Code;
 
+const char *get_error_message(Error_Code err_code);
+
 #endif
