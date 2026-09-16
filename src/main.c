@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../include/errors.h"
+#include "errors.h"
 
 #define MAGIC_NUMBER_SIZE 4
 #define DOS_MAGIC_NUMBER_SIZE 2

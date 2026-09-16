@@ -1,3 +1,5 @@
+#include "errors.h"
+
 const char *get_error_message(Error_Code err_code)
 {
         const char *error_message;
