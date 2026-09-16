@@ -3,21 +3,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../include/errors.h"
+
 #define MAGIC_NUMBER_SIZE 4
 #define DOS_MAGIC_NUMBER_SIZE 2
 #define E_LFANEW_OFFSET 0X3C
-
-typedef enum
-{
-    ERR_NONE = 0,
-
-    ERR_FILE_NOT_FOUND = 1,
-    ERR_FILE_READ_FAILED = 2,
-    ERR_FILE_WRITE_FAILED = 3,
-    ERR_FILE_ACCESS_FAILED = 4,
-    ERR_FILE_SIZE_CALCULATION_FAILED = 5
-
-} Error_Code;
 
 typedef enum {UNSUPPORTED = -1, ELF, PE} File_Format;
 
