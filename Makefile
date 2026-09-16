@@ -2,5 +2,5 @@
 CC=gcc
 CFLAGS=-Iinclude
 
-main.out: src/main.c
-	$(CC) -o main.out src/main.c $(CFLAGS)
+binary_parser: src/main.c src/errors.c
+	$(CC) -o binary_parser src/main.c src/errors.c $(CFLAGS)
