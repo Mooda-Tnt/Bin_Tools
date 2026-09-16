@@ -2,26 +2,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef enum
+{
+    ERR_NONE = 0,
+
+    ERR_FILE_NOT_FOUND = 1,
+    ERR_FILE_READ_FAILED = 2,
+    ERR_FILE_WRITE_FAILED = 3,
+    ERR_FILE_ACCESS_FAILED = 4,
+    ERR_FILE_SIZE_CALCULATION_FAILED = 5
+
+} Error_Code;
+
 typedef enum {UNSUPPORTED = -1, ELF, PE} File_Format;
 
-long get_binary_size(FILE * bin)
+Error_Code get_binary_size(FILE *bin, long *size)
 {
-	int result = fseek(bin, 0, SEEK_END);
-	if(result)
-	{
-		printf("An error occured while accessing the given binary.\n");
-		return -1L;
-	}
+    if(fseek(bin, 0, SEEK_END) != 0)
+        return ERR_FILE_ACCESS_FAILED;
 
-	long size = ftell(bin);
-	if(size == -1L)
-	{
-		printf("An error occured while calculating the size of the given binary.\n");
-        return -1L;
-	}
+    long result = ftell(bin);
+    if(result == -1L)
+        return ERR_FILE_SIZE_CALCULATION_FAILED;
 
-	rewind(bin);
-	return size;
+    *size = result;
+
+    rewind(bin);
+
+    return ERR_NONE;
 }
 
 File_Format identify_file(FILE * binary_file)
