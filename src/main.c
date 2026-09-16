@@ -86,11 +86,11 @@ Error_Code identify_file(FILE *bin, File_Format *file_format)
 int main(int argc, char **argv)
 {
 	if(argc == 1)
-    {
-    	printf("No binary file provided!\n");
+	{
+		printf("No binary file provided!\n");
 		return EXIT_FAILURE;
 	}
-
+	
 	char *bin_name = argv[1];
 	
 	FILE *bin = fopen(bin_name, "rb");
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	
 	long bin_size = get_binary_size(bin);
 	if(bin_size == -1L)
-    	return EXIT_FAILURE;
+		return EXIT_FAILURE;
 
 	if(bin_size < 4)
 	{
@@ -110,18 +110,16 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	// Debugging line.
-	printf("%ld\n", bin_size);
-
 	File_Format ff = identify_file(bin);
 	if(ff)
 	{
-			printf("Unsupported binary format!\n");
-			return EXIT_FAILURE;
+		printf("Unsupported binary format!\n");
+		return EXIT_FAILURE;
 	}
-
+	
 	printf("File Format: ELF\n");
-
+	
 	fclose(bin);
+	
 	return 0;
 }
