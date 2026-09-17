@@ -11,6 +11,14 @@
 
 typedef enum {UNSUPPORTED = -1, ELF, PE} Binary_Format;
 
+typedef struct
+{
+	FILE *bin_file;
+	char *bin_name;
+	long bin_size;
+	Binary_Format bin_format;
+} Binary;
+
 Error_Code open_binary_r(char *bin_name, FILE **bin);
 Error_Code close_binary(FILE **bin);
 Error_Code get_binary_size(FILE *bin, long *size);
