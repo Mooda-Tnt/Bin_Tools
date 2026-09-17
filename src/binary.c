@@ -8,9 +8,21 @@
 Error_Code open_binary_r(char *bin_name, FILE **bin)
 {
 	*bin = fopen(bin_name, "rb");
-	// TODO: Fix error.
 	if(!*bin)
-		return ERR_FILE_NOT_FOUND;
+		return ERR_BIN_NOT_FOUND;
+
+	return ERR_NONE;
+}
+
+Error_Code close_binary(FILE **bin)
+{
+	if(fclose(*bin))
+	{
+		*bin = NULL;
+		return ERR_BIN_CLOSING_FAILED;
+	}
+
+	*bin = NULL;
 
 	return ERR_NONE;
 }
@@ -18,11 +30,11 @@ Error_Code open_binary_r(char *bin_name, FILE **bin)
 Error_Code get_binary_size(FILE *bin, long *size)
 {
 	if(fseek(bin, 0, SEEK_END) != 0)
-		return ERR_FILE_ACCESS_FAILED;
+		return ERR_BIN_ACCESS_FAILED;
 
 	long result = ftell(bin);
 	if(result == -1L)
-		return ERR_FILE_SIZE_CALCULATION_FAILED;
+		return ERR_BIN_SIZE_CALCULATION_FAILED;
 
 	*size = result;
 
@@ -31,7 +43,7 @@ Error_Code get_binary_size(FILE *bin, long *size)
 	return ERR_NONE;
 }
 
-Error_Code identify_binary(FILE *bin, File_Format *file_format)
+Error_Code identify_binary(FILE *bin, Binary_Format *file_format)
 {
 	const unsigned char Elf_Magic_Number[MAGIC_NUMBER_SIZE] = {'\x7f', '\x45', '\x4c', '\x46'};
 	const unsigned char Dos_Magic_Number[DOS_MAGIC_NUMBER_SIZE] = {'\x4d', '\x5a'};
@@ -39,7 +51,7 @@ Error_Code identify_binary(FILE *bin, File_Format *file_format)
 
 	unsigned char magic_number[MAGIC_NUMBER_SIZE];
 	if(fread(magic_number, sizeof(*magic_number), MAGIC_NUMBER_SIZE, bin) != MAGIC_NUMBER_SIZE)
-		return ERR_FILE_READ_FAILED;
+		return ERR_BIN_READ_FAILED;
 
 	if(!memcmp(Elf_Magic_Number, magic_number, MAGIC_NUMBER_SIZE))
 		*file_format = ELF;
@@ -51,20 +63,20 @@ Error_Code identify_binary(FILE *bin, File_Format *file_format)
 		
 		// Access e_lfanew to learn where the PE signature begins.
 		if(fseek(bin, E_LFANEW_OFFSET - MAGIC_NUMBER_SIZE, SEEK_CUR) != 0)
-			return ERR_FILE_ACCESS_FAILED;
+			return ERR_BIN_ACCESS_FAILED;
 		
 		// TODO: Wory about endianness later.   
 		// Read e_lfanew.
 		if(fread(&e_lfanew, sizeof(uint32_t), object_count, bin) != object_count)
-			return ERR_FILE_READ_FAILED;
+			return ERR_BIN_READ_FAILED;
 		
 		// Access magic number of PE.
 		if(fseek(bin, e_lfanew - (E_LFANEW_OFFSET + sizeof(uint32_t)), SEEK_CUR) != 0)
-			return ERR_FILE_ACCESS_FAILED;
+			return ERR_BIN_ACCESS_FAILED;
 		
 		// Read magic number of PE.
 		if(fread(magic_number, sizeof(*magic_number), MAGIC_NUMBER_SIZE, bin) != MAGIC_NUMBER_SIZE)
-			return ERR_FILE_READ_FAILED;
+			return ERR_BIN_READ_FAILED;
 		
 		if(!memcmp(Pe_Magic_Number, magic_number, MAGIC_NUMBER_SIZE))
 			*file_format = PE;
